@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI CareerForge | UnsaidTalks Edition</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #FAFAFA; color: #333; min-height: 100vh; margin: 0; padding: 40px 20px; display: flex; justify-content: center; align-items: flex-start; }
+        .app-wrapper { background: #ffffff; padding: 40px; border-radius: 12px; border: 1px solid #eaeaea; width: 100%; max-width: 800px; box-shadow: 0 8px 30px rgba(18, 23, 29, 0.08); }
+        h2 { color: #12171D; margin-top: 0; }
+        .brand-text { color: #E99D46; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #12171D; font-size: 14px; font-weight: 600; }
+        input[type="text"], input[type="file"], select { width: 100%; background: #fff; color: #12171D; border: 1px solid #ccc; border-radius: 8px; padding: 12px; font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        input[type="text"]:focus, select:focus { border-color: #E99D46; outline: none; box-shadow: 0 0 0 2px rgba(233, 157, 70, 0.2); }
+        input[type="file"] { cursor: pointer; padding: 10px; color: #555; }
+        .btn-primary { background: #E99D46; color: #fff; font-weight: 800; padding: 16px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; transition: 0.2s; }
+        .btn-primary:hover { background: #d88b35; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(233, 157, 70, 0.3); }
+        .score-header { display: flex; justify-content: space-between; align-items: center; background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid #eaeaea; border-left: 4px solid #E99D46; margin: 25px 0; }
+        .big-score { font-size: 48px; font-weight: 800; color: #E99D46; margin: 0; line-height: 1; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: #FAFAFA; padding: 20px; border-radius: 8px; border: 1px solid #eaeaea; }
+        .card h4 { margin: 0 0 10px 0; color: #12171D; display: flex; justify-content: space-between; }
+        .card p { font-size: 13px; color: #555; margin: 0; line-height: 1.5; }
+        .metric { color: #E99D46; }
+        .error { color: #d32f2f; padding: 10px; border-radius: 8px; border: 1px solid #d32f2f; background: #ffebee; margin-top: 10px;}
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        function App() {
+            const [resumeFile, setResumeFile] = React.useState(null);
+            const [videoFile, setVideoFile] = React.useState(null);
+            const [data, setData] = React.useState({ target_role: 'Data Scientist', portfolio_url: '' });
+            const [result, setResult] = React.useState(null);
+            const [loading, setLoading] = React.useState(false);
+            const [errorMsg, setErrorMsg] = React.useState('');
+
+            const analyze = async () => {
+                if (!resumeFile) {
+                    setErrorMsg("Resume PDF is required.");
+                    return;
+                }
+                
+                setLoading(true);
+                setErrorMsg('');
+                setResult(null);
+
+                const formData = new FormData();
+                formData.append('resume_file', resumeFile);
+                if (videoFile) formData.append('video_file', videoFile);
+                formData.append('target_role', data.target_role);
+                formData.append('portfolio_url', data.portfolio_url);
+
+                try {
+                    const res = await fetch('http://localhost:5000/api/evaluate', {
+                        method: 'POST',
+                        body: formData 
+                    });
+                    
+                    const resData = await res.json();
+                    if (!res.ok) setErrorMsg(resData.error || 'Processing failed.');
+                    else setResult(resData);
+                } catch (e) {
+                    setErrorMsg('Server offline. Start backend app.py.');
+                }
+                setLoading(false);
+            };
+
+            return (
+                <div className="app-wrapper">
+                    <h2>AI CareerForge <span className="brand-text">x UnsaidTalks</span></h2>
+                    <p style={{color: '#555', marginBottom: '30px'}}>Configure your target role and upload materials for assessment.</p>
+                    
+                    <div className="input-group">
+                        <label>Target Job Role</label>
+                        <select onChange={e => setData({...data, target_role: e.target.value})}>
+                            <option value="Data Scientist">Data Scientist</option>
+                            <option value="UI/UX Designer">UI/UX Designer</option>
+                            <option value="Software Engineer">Software Engineer</option>
+                            <option value="Product Manager">Product Manager</option>
+                        </select>
+                    </div>
+
+                    <div className="grid" style={{marginBottom: '20px'}}>
+                        <div className="input-group">
+                            <label>1. Resume (PDF Required)</label>
+                            <input type="file" accept=".pdf" onChange={e => setResumeFile(e.target.files[0])} />
+                        </div>
+                        <div className="input-group">
+                            <label>2. Video Pitch (MP4/WebM) - Optional</label>
+                            <input type="file" accept="video/*" onChange={e => setVideoFile(e.target.files[0])} />
+                        </div>
+                    </div>
+                    
+                    <div className="input-group">
+                        <label>3. Portfolio/GitHub URL (Optional)</label>
+                        <input type="text" placeholder="https://" onChange={e => setData({...data, portfolio_url: e.target.value})} />
+                    </div>
+                    
+                    <button className="btn-primary" onClick={analyze} disabled={loading}>
+                        {loading ? 'Processing Models...' : 'Execute Readiness Assessment'}
+                    </button>
+
+                    {errorMsg && <div className="error">{errorMsg}</div>}
+
+                    {result && !result.error && (
+                        <div style={{marginTop: '30px'}}>
+                            <div className="score-header">
+                                <div>
+                                    <div style={{color: '#888', fontSize: '12px', letterSpacing: '1px', fontWeight: '600'}}>EVALUATING AGAINST</div>
+                                    <h3 style={{margin: '5px 0 0 0', color: '#12171D'}}>{result.target_role}</h3>
+                                </div>
+                                <div style={{textAlign: 'right'}}>
+                                    <h1 className="big-score">{result.overall_score}<span style={{fontSize: '24px', color: '#888'}}>/100</span></h1>
+                                </div>
+                            </div>
+
+                            <div className="grid">
+                                <div className="card">
+                                    <h4>Role Alignment <span className="metric">{result.breakdown.technical}/100</span></h4>
+                                    <p>{result.feedback.technical}</p>
+                                </div>
+                                <div className="card">
+                                    <h4>Resume Quality <span className="metric">{result.breakdown.resume}/100</span></h4>
+                                    <p>{result.feedback.resume}</p>
+                                </div>
+                                {result.breakdown.communication !== null && (
+                                    <div className="card">
+                                        <h4>Video Comms <span className="metric">{result.breakdown.communication}/100</span></h4>
+                                        <p>{result.feedback.communication}</p>
+                                    </div>
+                                )}
+                                <div className="card">
+                                    <h4>Portfolio <span className="metric">{result.breakdown.portfolio}/100</span></h4>
+                                    <p>{result.feedback.portfolio}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
