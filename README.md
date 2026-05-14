@@ -1,5 +1,4 @@
-# AI-CareerForge
-# AI CareerForge | UnsaidTalks B2B Assessment Engine 🚀
+# AI CareerForge | UnsaidTalks B2B Assessment Engine
 
 ** [WATCH THE 3-MINUTE DEMO VIDEO HERE] ([Insert_Your_Google_Drive_Link_Here](https://drive.google.com/file/d/1kjIOcQMGgkRGjQj2kEATZEWlksOcxfrF/view?usp=sharing))**
 
